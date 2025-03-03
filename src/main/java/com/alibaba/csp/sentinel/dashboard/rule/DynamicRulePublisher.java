@@ -15,11 +15,15 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule;
 
+import java.util.List;
+
 /**
  * @author Eric Zhao
  * @since 1.4.0
  */
 public interface DynamicRulePublisher<T> {
+
+    DynamicRulePublisher<List<?>> DEFAULT_PUBLISHER = (appName, rules) -> {throw new UnsupportedOperationException();};
 
     /**
      * Publish rules to remote rule configuration center for given application name.

@@ -20,12 +20,6 @@ import java.util.stream.Collectors;
 @Component
 public class DynamicRuleNacosDataSource {
 
-
-    private final DynamicRuleProvider<List<?>> NULL_PROVIDER = appName -> {throw new UnsupportedOperationException();};
-
-    private final DynamicRulePublisher<List<?>> NULL_PUBLISHER = (appName, rules) -> {throw new UnsupportedOperationException();};
-
-
     private final AppManagement appManagement;
 
     private final Map<Class<?>,DynamicRuleProvider<List<?>>> providers;
@@ -36,8 +30,12 @@ public class DynamicRuleNacosDataSource {
                                       ObjectProvider<List<DynamicRuleProvider<List<?>>>> providers,
                                       ObjectProvider<List<DynamicRulePublisher<List<?>>>> publishers) {
         this.appManagement = appManagement;
-        this.providers = providers.getIfAvailable(ArrayList::new).stream().collect(Collectors.toMap(t -> getParameterClass(t.getClass()), Function.identity()));
-        this.publishers = publishers.getIfAvailable(ArrayList::new).stream().collect(Collectors.toMap(t -> getParameterClass(t.getClass()),Function.identity()));
+        this.providers = providers.getIfAvailable(ArrayList::new).stream()
+                .filter(p -> p instanceof NacosSourceProvider)
+                .collect(Collectors.toMap(t -> getParameterClass(t.getClass()), Function.identity()));
+        this.publishers = publishers.getIfAvailable(ArrayList::new).stream()
+                .filter(p -> p instanceof NacosPublisher)
+                .collect(Collectors.toMap(t -> getParameterClass(t.getClass()),Function.identity()));
     }
 
     public static Class<?>  getParameterClass(Class<?> clazz) {
@@ -59,7 +57,7 @@ public class DynamicRuleNacosDataSource {
             return Collections.emptyList();
         }
         MachineInfo machine = list.get(0);
-        DynamicRuleProvider<List<?>> provider = providers.getOrDefault(rule, NULL_PROVIDER);
+        DynamicRuleProvider<List<?>> provider = providers.getOrDefault(rule, DynamicRuleProvider.DEFAULT_PROVIDER);
         List<?> rules =  provider.getRules(appName);
         if (CollectionUtils.isEmpty(rules)){
             return Collections.emptyList();
@@ -72,7 +70,7 @@ public class DynamicRuleNacosDataSource {
     public <T,R> void publish(String app, List<T> rules, Class<R> c, Function<T,R> fun) throws Exception {
 
         List<R> r = rules.stream().map(fun).collect(Collectors.toList());
-        publishers.getOrDefault(c, NULL_PUBLISHER).publish(app,r);
+        publishers.getOrDefault(c, DynamicRulePublisher.DEFAULT_PUBLISHER).publish(app,r);
     }
 
 

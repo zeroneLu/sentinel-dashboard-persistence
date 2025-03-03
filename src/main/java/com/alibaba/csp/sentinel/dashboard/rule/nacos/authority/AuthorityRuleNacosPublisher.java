@@ -15,7 +15,7 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.authority;
 
-import com.alibaba.csp.sentinel.dashboard.rule.nacos.AbstractNacosPublisher;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosPublisher;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigClientProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosProperties;
@@ -28,7 +28,7 @@ import java.util.List;
 /**
  */
 @Component
-public class AuthorityRuleNacosPublisher extends AbstractNacosPublisher<AuthorityRule> {
+public class AuthorityRuleNacosPublisher extends NacosPublisher<AuthorityRule> {
 
 
     protected AuthorityRuleNacosPublisher(NacosConfigClientProvider nacosConfigClientProvider, Converter<List<AuthorityRule>, String> converter, NacosProperties nacosProperties) {

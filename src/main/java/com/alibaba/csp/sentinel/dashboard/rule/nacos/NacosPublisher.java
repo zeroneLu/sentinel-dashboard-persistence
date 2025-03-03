@@ -9,12 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 /**
- * 抽象公用Nacos规则发布者
- *
- * 用于把配置发布到nacos保存
+ * Nacos规则发布
  */
 @Slf4j
-public abstract class AbstractNacosPublisher<T> implements DynamicRulePublisher<List<T>> {
+public abstract class NacosPublisher<T> implements DynamicRulePublisher<List<T>> {
 
     private final NacosConfigClientProvider nacosConfigClientProvider;
 
@@ -25,7 +23,7 @@ public abstract class AbstractNacosPublisher<T> implements DynamicRulePublisher<
     private final NacosProperties nacosProperties;
 
 
-    protected AbstractNacosPublisher(NacosConfigClientProvider nacosConfigClientProvider, Converter<List<T>, String> converter, NacosProperties nacosProperties) {
+    protected NacosPublisher(NacosConfigClientProvider nacosConfigClientProvider, Converter<List<T>, String> converter, NacosProperties nacosProperties) {
         this.nacosConfigClientProvider = nacosConfigClientProvider;
         this.converter = converter;
         this.nacosProperties = nacosProperties;

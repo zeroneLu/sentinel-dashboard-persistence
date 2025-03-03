@@ -1,7 +1,7 @@
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway;
 
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
-import com.alibaba.csp.sentinel.dashboard.rule.nacos.AbstractNacosPublisher;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosPublisher;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigClientProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosProperties;
@@ -14,7 +14,7 @@ import java.util.List;
  * 网关api分组规则Nacos发布者
  */
 @Component
-public class GatewayApiNacosPublisher extends AbstractNacosPublisher<ApiDefinition> {
+public class GatewayApiNacosPublisher extends NacosPublisher<ApiDefinition> {
 
 
     protected GatewayApiNacosPublisher(NacosConfigClientProvider nacosConfigClientProvider, Converter<List<ApiDefinition>, String> converter, NacosProperties nacosProperties) {

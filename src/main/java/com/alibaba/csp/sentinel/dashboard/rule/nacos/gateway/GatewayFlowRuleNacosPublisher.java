@@ -1,7 +1,7 @@
 package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway;
 
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
-import com.alibaba.csp.sentinel.dashboard.rule.nacos.AbstractNacosPublisher;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosPublisher;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigClientProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosProperties;
@@ -14,7 +14,7 @@ import java.util.List;
  * 网关流控规则Nacos发布者
  */
 @Component("gatewayFlowRuleNacosPublisher")
-public class GatewayFlowRuleNacosPublisher extends AbstractNacosPublisher<GatewayFlowRule> {
+public class GatewayFlowRuleNacosPublisher extends NacosPublisher<GatewayFlowRule> {
 
 
     protected GatewayFlowRuleNacosPublisher(NacosConfigClientProvider nacosConfigClientProvider, Converter<List<GatewayFlowRule>, String> converter, NacosProperties nacosProperties) {

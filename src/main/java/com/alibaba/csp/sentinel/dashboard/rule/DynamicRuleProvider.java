@@ -15,11 +15,17 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule;
 
+import java.util.List;
+
 /**
  * @author Eric Zhao
  * @since 1.4.0
  */
 public interface DynamicRuleProvider<T> {
+
+    DynamicRuleProvider<List<?>> DEFAULT_PROVIDER = appName -> {throw new UnsupportedOperationException();};
+
+
 
     T getRules(String appName) throws Exception;
 }

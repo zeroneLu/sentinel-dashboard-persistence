@@ -30,9 +30,16 @@ sentinel.nacos.namespace=xxxxx
 2.1.2在nacos对应的命名空间和group下新增sentinel-namespace-config.yaml配置文件，
   # 配置规则类型，对应值如下：
     sentinel-service:
+       # 是否启用阿里云mse（nacos企业版），默认false
+       mseEnabled：false
        source:
          - name: {appName}
+           username: {username}
+           password: {password}
            namespace: {namespace}
+           accessKey: {accessKey}
+           secretKey: {secretKey}
+           instanceId: {instanceId}
          ....  
 ```
 ###  2.2 服务端配置文件取以下规则配置

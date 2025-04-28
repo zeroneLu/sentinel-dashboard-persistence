@@ -15,6 +15,8 @@ import java.util.List;
 public class SentinelNacosSourceProperties {
 
 
+    private boolean mseEnabled = Boolean.FALSE;
+
     private List<AppSource> source;
 
 
@@ -25,7 +27,17 @@ public class SentinelNacosSourceProperties {
 
         private String name;
 
+        private String instanceId;
+
         private String namespace;
+
+        private String accessKey;
+
+        private String secretKey;
+
+        private String username;
+
+        private String password;
 
 
     }

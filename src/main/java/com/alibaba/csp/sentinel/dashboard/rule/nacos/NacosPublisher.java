@@ -41,7 +41,7 @@ public abstract class NacosPublisher<T> implements DynamicRulePublisher<List<T>>
 
         log.info("publish; dataId: {},groupId: {},rules: {}",dataId,groupId,rules);
 
-        ConfigService configService = nacosConfigClientProvider.getConfigService(app);
+        ConfigService configService = nacosConfigClientProvider.getAdapterConfigService(app);
 
         if (configService == null){
             log.warn("nacos [{} ]config client is null,please config ",app);

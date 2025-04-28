@@ -1,5 +1,7 @@
 package com.alibaba.csp.sentinel.dashboard.rule.nacos;
 
+import com.alibaba.csp.sentinel.dashboard.client.mse.MseConfigService;
+import com.alibaba.csp.sentinel.dashboard.client.mse.MsePropertyKeyConst;
 import com.alibaba.csp.sentinel.dashboard.util.YamlPropertyLoader;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigFactory;
@@ -29,33 +31,37 @@ public class NacosConfigClientProvider implements InitializingBean, DisposableBe
 
     private static final String SENTINEL_DATA_SOURCE = "sentinel-datasource-config.yaml";
 
-
     @Getter
     private SentinelNacosSourceProperties properties;
 
-
     private final ConfigService configService;
-
 
     private final NacosProperties nacosProperties;
 
+    private final Map<String, ConfigService> configServices;
 
-    private final Map<String, ConfigService> configServiceMap;
-
+    private final Map<String, ConfigService> mseConfigServices;
 
 
     public NacosConfigClientProvider(NacosProperties nacosProperties) {
 
         this.nacosProperties = nacosProperties;
-        this.configServiceMap = new ConcurrentHashMap<>();
+        this.configServices = new ConcurrentHashMap<>();
+        this.mseConfigServices = new ConcurrentHashMap<>();
         this.configService = createNacosConfigService(nacosProperties.getNamespace());
 
     }
 
     public ConfigService getConfigService(String app) {
-        return configServiceMap.get(app);
+        return configServices.get(app);
     }
 
+    public ConfigService getAdapterConfigService(String app) {
+        if (properties.isMseEnabled()) {
+            return mseConfigServices.get(app);
+        }
+        return configServices.get(app);
+    }
 
 
     private Listener createListener() {
@@ -103,17 +109,56 @@ public class NacosConfigClientProvider implements InitializingBean, DisposableBe
 
         List<SentinelNacosSourceProperties.AppSource> namespaces = properties.getSource();
         if (CollectionUtils.isEmpty(namespaces)) {
-            destroyConfigServiceClient(configServiceMap.keySet());
+            destroyConfigServiceClient(configServices.keySet());
             return;
         }
 
-        if (!CollectionUtils.isEmpty(configServiceMap)) {
+        if (!CollectionUtils.isEmpty(configServices)) {
             Set<String> keys = namespaces.stream().map(SentinelNacosSourceProperties.AppSource::getName).collect(Collectors.toSet());
-            Set<String> excludeApp = configServiceMap.keySet().stream().filter(k -> !keys.contains(k)).collect(Collectors.toSet());
+            Set<String> excludeApp = configServices.keySet().stream().filter(k -> !keys.contains(k)).collect(Collectors.toSet());
             destroyConfigServiceClient(excludeApp);
         }
+        if (!CollectionUtils.isEmpty(mseConfigServices)) {
+            Set<String> keys = namespaces.stream().map(SentinelNacosSourceProperties.AppSource::getName).collect(Collectors.toSet());
+            Set<String> excludeApp = mseConfigServices.keySet().stream().filter(k -> !keys.contains(k)).collect(Collectors.toSet());
+            destroyMseConfigServiceClient(excludeApp);
+        }
         // 刷新客户端
-        namespaces.forEach((n) -> configServiceMap.computeIfAbsent(n.getName(), k -> createNacosConfigService(n.getNamespace())));
+        namespaces.forEach((n) -> {
+            if (configServices.containsKey(n.getName())) {
+                return;
+            }
+            ConfigService client = createNacosConfigService(n);
+            if (client == null) {
+                return;
+            }
+            log.info("create nacos client:{}", n.getName());
+            configServices.put(n.getName(), client);
+
+            // 创建mse 客户端
+            if (!properties.isMseEnabled()) {
+                return;
+            }
+            if (mseConfigServices.containsKey(n.getName())) {
+                return;
+            }
+            ConfigService mseClient = createMseNacosConfigService(n);
+            if (mseClient == null) {
+                return;
+            }
+            log.info("create mse client:{}", n.getName());
+            mseConfigServices.put(n.getName(), mseClient);
+        });
+    }
+
+    private void destroyMseConfigServiceClient(Set<String> excludeApp) {
+        if (CollectionUtils.isEmpty(excludeApp)) {
+            return;
+        }
+
+        for (String app : excludeApp) {
+            mseConfigServices.remove(app);
+        }
     }
 
 
@@ -124,7 +169,7 @@ public class NacosConfigClientProvider implements InitializingBean, DisposableBe
         }
 
         for (String app : excludeApp) {
-            ConfigService destroyApp = configServiceMap.remove(app);
+            ConfigService destroyApp = configServices.remove(app);
             try {
                 destroyApp.shutDown();
             } catch (NacosException e) {
@@ -134,21 +179,50 @@ public class NacosConfigClientProvider implements InitializingBean, DisposableBe
 
     }
 
-
     private ConfigService createNacosConfigService(String namespace) {
+        return createNacosConfigService(namespace, nacosProperties.getSecretKey(), nacosProperties.getAccessKey(), nacosProperties.getUsername(), nacosProperties.getPassword(), true);
+    }
+
+    private ConfigService createNacosConfigService(SentinelNacosSourceProperties.AppSource appSource) {
+        return createNacosConfigService(appSource.getNamespace(), appSource.getSecretKey(), appSource.getAccessKey(), appSource.getUsername(), appSource.getPassword(), false);
+    }
+
+
+    private ConfigService createNacosConfigService(String namespace, String secretKey, String accessKey, String username, String password, boolean throwError) {
 
         Properties properties = new Properties();
         PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-        map.from(namespace).to(properties.in(PropertyKeyConst.NAMESPACE));
         map.from(nacosProperties::getServerAddr).to(properties.in(PropertyKeyConst.SERVER_ADDR));
-        map.from(nacosProperties::getSecretKey).to(properties.in(PropertyKeyConst.SECRET_KEY));
-        map.from(nacosProperties::getAccessKey).to(properties.in(PropertyKeyConst.ACCESS_KEY));
-        map.from(nacosProperties::getUsername).to(properties.in(PropertyKeyConst.USERNAME));
-        map.from(nacosProperties::getPassword).to(properties.in(PropertyKeyConst.PASSWORD));
+        map.from(namespace).to(properties.in(PropertyKeyConst.NAMESPACE));
+        map.from(secretKey).to(properties.in(PropertyKeyConst.SECRET_KEY));
+        map.from(accessKey).to(properties.in(PropertyKeyConst.ACCESS_KEY));
+        map.from(username).to(properties.in(PropertyKeyConst.USERNAME));
+        map.from(password).to(properties.in(PropertyKeyConst.PASSWORD));
         try {
             return ConfigFactory.createConfigService(properties);
         } catch (NacosException e) {
-            throw new IllegalStateException(e);
+            if (throwError) {
+                throw new IllegalStateException(e);
+            }
+            log.error("create nacos client error", e);
+            return null;
+        }
+    }
+
+
+    private ConfigService createMseNacosConfigService(SentinelNacosSourceProperties.AppSource appSource) {
+
+        Properties properties = new Properties();
+        PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+        map.from(appSource.getNamespace()).to(properties.in(PropertyKeyConst.NAMESPACE));
+        map.from(appSource.getAccessKey()).to(properties.in(PropertyKeyConst.ACCESS_KEY));
+        map.from(appSource.getSecretKey()).to(properties.in(PropertyKeyConst.SECRET_KEY));
+        map.from(appSource.getInstanceId()).to(properties.in(MsePropertyKeyConst.INSTANCE_ID));
+        try {
+            return MseConfigService.of(properties);
+        } catch (NacosException e) {
+            log.error("create mse nacos client error", e);
+            return null;
         }
     }
 
@@ -176,7 +250,7 @@ public class NacosConfigClientProvider implements InitializingBean, DisposableBe
 
     @Override
     public void destroy() {
-        destroyConfigServiceClient(configServiceMap.keySet());
+        destroyConfigServiceClient(configServices.keySet());
     }
 
 

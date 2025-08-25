@@ -31,13 +31,13 @@ sentinel.nacos.namespace=xxxxx
   # 配置规则类型，对应值如下：
     sentinel-service:
        source:
-         - name: {appName}
-           namespace: {namespace}
-           instanceId：{instanceId}
-           accessKey： {accessKey}
-           secretKey： {secretKey}
-           username：  {username}
-           password：  {password}
+         - name: {appName} # 接入端应用的服务名称
+           namespace: {namespace}  # 接入端应用的Nacos命名空间
+           instanceId：{instanceId} # 接入端应用的Nacos的instanceId空间
+           accessKey： {accessKey} # 接入端应用的Nacos accessKey空间
+           secretKey： {secretKey} # 接入端应用的Nacos secretKey空间
+           username：  {username} # 接入端应用的Nacos username空间
+           password：  {password} # 接入端应用的Nacos password空间
          ....  
 ```
 ###  2.2 服务端配置文件取以下规则配置

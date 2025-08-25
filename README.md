@@ -11,7 +11,7 @@
 #### Q2: 针对不同服务项目，且命名空间不同如何完成Nacos配置发布和订阅？
   查过官方文档【https://nacos.io/blog/faq/nacos-user-question-history8193/ 】了解，nacos不支持多namespace客户端访问，解决方案可通过构建多客户端解决订阅和发布问题  
 #### Q3: 如何完成多客户端的动态新增？
-  新增Nacos配置文件[sentinel-namespace-config.yaml]详细查看【 com.alibaba.csp.sentinel.dashboard.datasource.nacos.NacosConfigClientProvider 】，通过nacos动态配置，完成多服务端项目接入Nacos，且有不同命名空间情况下，构建租户隔离客户端来发布和拉取配置使用
+  新增Nacos配置文件[sentinel-datasource-config.yaml]详细查看【 com.alibaba.csp.sentinel.dashboard.datasource.nacos.NacosConfigClientProvider 】，通过nacos动态配置，完成多服务端项目接入Nacos，且有不同命名空间情况下，构建租户隔离客户端来发布和拉取配置使用
 #### Q4: 增加了什么功能？
  
 - 增加NACOS持久化，项目目录在【com.alibaba.csp.sentinel.dashboard.rule.nacos】，支持多命名空间接入，方便不同项目开发接入
@@ -20,19 +20,24 @@
 ## 2. 接入规则
 ### 2.1 sentinel-dashboard配置
 ```
-2.1.1 dashborad 工程增加nacos配置
+2.1.1 dashborad 工程增加nacos配置，读取group默认SENTINEL_GROUP，可自行改动，详细配置查看【com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosProperties】
 
 sentinel.nacos.server-addr=xxx
 sentinel.nacos.username=xxx
 sentinel.nacos.password=xxxx
 sentinel.nacos.namespace=xxxxx
 
-2.1.2在nacos对应的命名空间和group下新增sentinel-namespace-config.yaml配置文件，
+2.1.2在nacos对应的命名空间和group下新增sentinel-datasource-config.yaml配置文件，详细配置查看【com.alibaba.csp.sentinel.dashboard.rule.nacos.SentinelNacosSourceProperties】
   # 配置规则类型，对应值如下：
     sentinel-service:
        source:
          - name: {appName}
            namespace: {namespace}
+           instanceId：{instanceId}
+           accessKey： {accessKey}
+           secretKey： {secretKey}
+           username：  {username}
+           password：  {password}
          ....  
 ```
 ###  2.2 服务端配置文件取以下规则配置
@@ -49,7 +54,7 @@ sentinel.nacos.namespace=xxxxx
    
 详细可以参考 com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil
    
-2.2.2文件示例
+2.2.2 客户端文件示例
 
 spring:
   cloud:

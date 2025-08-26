@@ -16,7 +16,7 @@
  
 - 增加NACOS持久化，项目目录在【com.alibaba.csp.sentinel.dashboard.rule.nacos】，支持多命名空间接入，方便不同项目开发接入
 - 新增.*通配符的正则判定，支持授权规则、流控规则、热点规则，详细查看【com.alibaba.csp.sentinel.dashboard.util.RegexRuleUtil】
-- 新增 mse（nacos企业版）接入，【com.alibaba.csp.sentinel.dashboard.rule.nacos.SentinelNacosSourceProperties.AppSource#instanceId】字段是对mse支持，如果是使用开源nacos版本，请忽略该字段，mse接入如果是需要有写入权限，通用版本nacos不适用，需要阿里云的SDK接入配置后才能发布配置
+- 新增 mse（nacos企业版）接入，【com.alibaba.csp.sentinel.dashboard.rule.nacos.SentinelNacosSourceProperties.AppSource#instanceId】字段是对mse支持，如果是使用开源nacos版本，请忽略该字段，说明下：mse接入是需要特定的写入权限，通用版本nacos不适用，需要阿里云的SDK接入配置后才能发布配置
 
 
 ## 2. 接入规则
